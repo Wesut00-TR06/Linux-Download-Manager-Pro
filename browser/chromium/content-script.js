@@ -1,3 +1,5 @@
+const t = (k) => (window.LDM_I18N ? window.LDM_I18N.t(k) : k);
+
 const DOWNLOADABLE_EXTENSIONS = new Set([
   "7z",
   "apk",
@@ -78,7 +80,7 @@ function disconnectExtension() {
   pageObserver?.disconnect();
   hoverButton?.remove();
   mediaOverlayRoot?.remove();
-  showToast("Eklenti yenilendi. Bu video sayfasını da yenileyin.", "info");
+  showToast(t("toast_reloaded"), "info");
 }
 
 function sendExtensionMessage(message, callback) {
@@ -342,15 +344,15 @@ function showQualityPicker(candidate, anchorElement) {
       border-bottom: 1px solid rgba(134, 232, 255, 0.1) !important;
       margin-top: 4px !important;
     `);
-    plHeader.textContent = "📑 TÜM MİX / LİSTE (Albüm Klasörüne)";
+    plHeader.textContent = t("playlist_header");
     picker.appendChild(plHeader);
 
     const playlistOptions = [
-      { label: "🎵 Tüm Mix'i MP3 İndir (320k + Kapak & ID3)", format: "audio_mp3_320" },
-      { label: "🎵 Tüm Mix'i FLAC İndir (Kayıpsız / Hi-Fi)", format: "audio_flac" },
-      { label: "🎵 Tüm Mix'i M4A İndir (Apple AAC)", format: "audio_m4a" },
-      { label: "🎬 Tüm Mix'i Video İndir (1080p / MP4)", format: "bv*[height<=1080]+ba/b" },
-      { label: "🎬 Tüm Mix'i Video İndir (En Yüksek / 4K)", format: "bv*+ba/b" }
+      { label: t("playlist_mp3"), format: "audio_mp3_320" },
+      { label: t("playlist_flac"), format: "audio_flac" },
+      { label: t("playlist_m4a"), format: "audio_m4a" },
+      { label: t("playlist_video_1080p"), format: "bv*[height<=1080]+ba/b" },
+      { label: t("playlist_video_best"), format: "bv*+ba/b" }
     ];
 
     for (const opt of playlistOptions) {
@@ -398,14 +400,14 @@ function showQualityPicker(candidate, anchorElement) {
       border-top: 1px solid rgba(255,255,255,0.1) !important;
       margin-top: 6px !important;
     `);
-    singleHeader.textContent = "🎬 Sadece Bu Parçayı / Videoyu İndir";
+    singleHeader.textContent = t("single_header");
     picker.appendChild(singleHeader);
 
     const singleOptions = [
-      { label: "🎬 En iyi video (4K / En Yüksek)", format: "bv*+ba/b" },
-      { label: "🎬 1080p Full HD", format: "bv*[height<=1080]+ba/b" },
-      { label: "🎬 720p HD", format: "bv*[height<=720]+ba/b" },
-      { label: "🎵 MP3 Müzik (Tek Parça + Kapak & Bilgi)", format: "audio_mp3_320" }
+      { label: t("single_best"), format: "bv*+ba/b" },
+      { label: t("single_1080p"), format: "bv*[height<=1080]+ba/b" },
+      { label: t("single_720p"), format: "bv*[height<=720]+ba/b" },
+      { label: t("single_mp3"), format: "audio_mp3_320" }
     ];
 
     for (const opt of singleOptions) {
@@ -446,13 +448,13 @@ function showQualityPicker(candidate, anchorElement) {
   } else {
     // Normal single video / page options
     const qualities = [
-      { label: "🎬 En iyi video (4K / En Yüksek)", format: "bv*+ba/b" },
-      { label: "🎬 1080p Full HD", format: "bv*[height<=1080]+ba/b" },
-      { label: "🎬 720p HD", format: "bv*[height<=720]+ba/b" },
-      { label: "🎬 480p SD", format: "bv*[height<=480]+ba/b" },
-      { label: "🎵 MP3 Müzik (320k + Kapak & Bilgi)", format: "audio_mp3_320" },
-      { label: "🎵 FLAC Müzik (Kayıpsız / Hi-Fi)", format: "audio_flac" },
-      { label: "🎵 M4A Müzik (Apple AAC Yüksek)", format: "audio_m4a" }
+      { label: t("single_best"), format: "bv*+ba/b" },
+      { label: t("single_1080p"), format: "bv*[height<=1080]+ba/b" },
+      { label: t("single_720p"), format: "bv*[height<=720]+ba/b" },
+      { label: t("single_480p"), format: "bv*[height<=480]+ba/b" },
+      { label: t("single_mp3"), format: "audio_mp3_320" },
+      { label: t("single_flac"), format: "audio_flac" },
+      { label: t("single_m4a"), format: "audio_m4a" }
     ];
 
     for (const quality of qualities) {
@@ -536,7 +538,7 @@ function resolveSourcePageUrl(candidate, isPlaylist = false) {
 }
 
 function triggerCaptureWithFormat(candidate, format, isPlaylist = false) {
-  showToast(isPlaylist ? "Tüm çalma listesi LDM'ye gönderiliyor..." : "İndirme LDM'ye gönderiliyor...", "info");
+  showToast(isPlaylist ? t("sending_playlist") : t("sending_download"), "info");
   armCaptureTimeout();
 
   const sourcePageUrl = resolveSourcePageUrl(candidate, isPlaylist);
@@ -960,7 +962,7 @@ function refreshMediaOverlay() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "ldm-media-button";
-    button.textContent = "⬇ LDM İndir";
+    button.textContent = t("download_btn");
     if (target.pinned) {
       // Without a player anchor, a floating button could cover the video.
       continue;
@@ -1024,7 +1026,7 @@ function injectRedditButtons() {
 
     const btn = document.createElement("div");
     btn.className = "ldm-site-btn";
-    btn.textContent = "⬇ LDM İndir";
+    btn.textContent = t("download_btn");
     btn.setAttribute("style", `
       display: block !important;
       z-index: 2147483647 !important;
@@ -1112,7 +1114,7 @@ function injectRedditButtons() {
           }
         });
       } else {
-        showToast("Video URL bulunamadı.", "error");
+        showToast(t("toast_no_url"), "error");
       }
     }, true);
 
@@ -2344,8 +2346,8 @@ function isLikelyObservedMediaUrl(url) {
 
   const badge = document.createElement("div");
   badge.className = "ldm-drawer-badge";
-  badge.innerHTML = `<span>⚡</span> <span>LDM İndirici</span> <span>▲</span>`;
-  badge.title = "Linux Download Manager İndirme Paneli";
+  badge.innerHTML = `<span>⚡</span> <span>${t("downloader_badge")}</span> <span>▲</span>`;
+  badge.title = t("panel_title");
 
   const panel = document.createElement("div");
   panel.className = "ldm-drawer-panel is-hidden";
@@ -2355,28 +2357,29 @@ function isLikelyObservedMediaUrl(url) {
         <span style="color:#00d287;">⚡</span> Linux Download Manager
       </div>
       <div class="ldm-drawer-actions">
-        <button class="ldm-icon-btn" id="ldm-btn-clear" title="Geçmişi Temizle">🧹</button>
-        <button class="ldm-icon-btn" id="ldm-btn-dash" title="Ayrı Sekmede Aç">🌐</button>
-        <button class="ldm-icon-btn" id="ldm-btn-close" title="Paneli Kapat">✕</button>
+        <select id="ldm-lang-select" style="background:#1e2430; color:#8b9eb5; border:1px solid rgba(255,255,255,0.15); border-radius:4px; font-size:10px; padding:2px 3px; cursor:pointer; outline:none;" title="${t("lang_label")}"></select>
+        <button class="ldm-icon-btn" id="ldm-btn-clear" title="${t("clear_history")}">🧹</button>
+        <button class="ldm-icon-btn" id="ldm-btn-dash" title="${t("open_panel")}">🌐</button>
+        <button class="ldm-icon-btn" id="ldm-btn-close" title="${t("close_panel")}">✕</button>
       </div>
     </div>
     <div class="ldm-drawer-body" id="ldm-drawer-items">
-      <div style="text-align:center; padding:30px 10px; color:#8b9eb5;">Yükleniyor...</div>
+      <div style="text-align:center; padding:30px 10px; color:#8b9eb5;">...</div>
     </div>
     <div class="ldm-drawer-footer" style="padding: 7px 12px; background: rgba(0,0,0,0.4); border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #8b9eb5;">
       <div style="display:flex; align-items:center; gap:5px;">
-        <span title="İndirme Hız Sınırlayıcı">⚡ Hız:</span>
+        <span id="ldm-txt-speed" title="${t("speed_label")}">${t("speed_label")}</span>
         <select id="ldm-speed-limit" style="background:#1e2430; color:#eee; border:1px solid rgba(255,255,255,0.15); border-radius:4px; font-size:10px; padding:2px 4px; cursor:pointer;">
-          <option value="0">⚡ Sınırsız</option>
+          <option value="0">${t("speed_unlimited")}</option>
           <option value="10240">🚀 10 MB/s</option>
           <option value="5120">🐢 5 MB/s</option>
           <option value="2048">🐌 2 MB/s</option>
           <option value="1024">1 MB/s</option>
         </select>
       </div>
-      <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="Tüm indirmeler tamamlandığında bilgisayarı otomatik kapatır">
+      <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="${t("shutdown_tooltip")}">
         <input type="checkbox" id="ldm-auto-shutdown" style="cursor:pointer; accent-color:#00d287;">
-        <span style="font-size:10px;">⏹ Bittiğinde Kapat</span>
+        <span id="ldm-txt-shutdown" style="font-size:10px;">${t("shutdown_label")}</span>
       </label>
     </div>
   `;
@@ -2428,6 +2431,32 @@ function isLikelyObservedMediaUrl(url) {
     fetchAndRender();
   });
 
+  const langSel = panel.querySelector("#ldm-lang-select");
+  function updateDrawerLanguage() {
+    panel.querySelector("#ldm-btn-clear")?.setAttribute("title", t("clear_history"));
+    panel.querySelector("#ldm-btn-dash")?.setAttribute("title", t("open_panel"));
+    panel.querySelector("#ldm-btn-close")?.setAttribute("title", t("close_panel"));
+    const opt0 = panel.querySelector("#ldm-speed-limit option[value='0']");
+    if (opt0) opt0.textContent = t("speed_unlimited");
+    const shutTxt = panel.querySelector("#ldm-txt-shutdown");
+    if (shutTxt) shutTxt.textContent = t("shutdown_label");
+    const spdTxt = panel.querySelector("#ldm-txt-speed");
+    if (spdTxt) { spdTxt.textContent = t("speed_label"); spdTxt.title = t("speed_label"); }
+    badge.title = t("panel_title");
+  }
+
+  if (langSel && window.LDM_I18N) {
+    langSel.innerHTML = window.LDM_I18N.languages
+      .map((l) => `<option value="${l.code}">${l.flag} ${l.code.toUpperCase()}</option>`)
+      .join("");
+    langSel.value = window.LDM_I18N.getLanguage();
+    langSel.addEventListener("change", (e) => {
+      window.LDM_I18N.setLanguage(e.target.value);
+      updateDrawerLanguage();
+      fetchAndRender();
+    });
+  }
+
   const speedSel = panel.querySelector("#ldm-speed-limit");
   const shutCheck = panel.querySelector("#ldm-auto-shutdown");
 
@@ -2450,7 +2479,7 @@ function isLikelyObservedMediaUrl(url) {
     shutCheck.addEventListener("change", async () => {
       await ldmApi("/api/settings", "POST", { auto_shutdown: shutCheck.checked });
       if (shutCheck.checked) {
-        showToast("Tüm indirmeler bittiğinde sistem otomatik kapatılacak.", "info");
+        showToast(t("shutdown_toast"), "info");
       }
     });
   }
@@ -2477,7 +2506,7 @@ function isLikelyObservedMediaUrl(url) {
     }
 
     if (!items || items.length === 0) {
-      listEl.innerHTML = `<div style="text-align:center; padding:35px 15px; color:#8b9eb5; font-size:12px;">Henüz indirme yok.<br><br>Videodaki <b>"LDM İndir"</b> butonuna basarak indirme başlatabilirsiniz.</div>`;
+      listEl.innerHTML = `<div style="text-align:center; padding:35px 15px; color:#8b9eb5; font-size:12px;">${t("empty_downloads")}</div>`;
       return;
     }
 
@@ -2487,20 +2516,20 @@ function isLikelyObservedMediaUrl(url) {
       const isC = item.status === "completed";
 
       let statusBadge = "";
-      if (isD) statusBadge = `<span class="ldm-badge-sm ldm-badge-downloading">İndiriliyor</span>`;
-      else if (isP) statusBadge = `<span class="ldm-badge-sm ldm-badge-paused">Duraklatıldı</span>`;
-      else if (isC) statusBadge = `<span class="ldm-badge-sm ldm-badge-completed">Tamamlandı</span>`;
-      else statusBadge = `<span class="ldm-badge-sm ldm-badge-failed">İptal</span>`;
+      if (isD) statusBadge = `<span class="ldm-badge-sm ldm-badge-downloading">${t("status_downloading")}</span>`;
+      else if (isP) statusBadge = `<span class="ldm-badge-sm ldm-badge-paused">${t("status_paused")}</span>`;
+      else if (isC) statusBadge = `<span class="ldm-badge-sm ldm-badge-completed">${t("status_completed")}</span>`;
+      else statusBadge = `<span class="ldm-badge-sm ldm-badge-failed">${t("status_failed")}</span>`;
 
       return `
         <div class="ldm-card">
           <div class="ldm-card-header">
             <div class="ldm-card-name" title="${item.title}">${item.title}</div>
             <div class="ldm-card-btns">
-              ${isD ? `<button class="ldm-icon-btn" data-act="pause" data-id="${item.id}" title="Duraklat">⏸</button>` : ''}
-              ${isP ? `<button class="ldm-icon-btn" data-act="resume" data-id="${item.id}" style="color:#00d287;" title="Devam Et">▶</button>` : ''}
-              ${(isD || isP) ? `<button class="ldm-icon-btn" data-act="cancel" data-id="${item.id}" style="color:#ff4757;" title="İptal Et">✕</button>` : ''}
-              ${isC ? `<button class="ldm-icon-btn" data-act="play" data-id="${item.id}" style="color:#00d287;" title="Dosyayı Oynat / Aç">▶</button><button class="ldm-icon-btn" data-act="open" data-id="${item.id}" title="Klasörde Göster">📁</button>` : ''}
+              ${isD ? `<button class="ldm-icon-btn" data-act="pause" data-id="${item.id}" title="${t("act_pause")}">⏸</button>` : ''}
+              ${isP ? `<button class="ldm-icon-btn" data-act="resume" data-id="${item.id}" style="color:#00d287;" title="${t("act_resume")}">▶</button>` : ''}
+              ${(isD || isP) ? `<button class="ldm-icon-btn" data-act="cancel" data-id="${item.id}" style="color:#ff4757;" title="${t("act_cancel")}">✕</button>` : ''}
+              ${isC ? `<button class="ldm-icon-btn" data-act="play" data-id="${item.id}" style="color:#00d287;" title="${t("act_play")}">▶</button><button class="ldm-icon-btn" data-act="open" data-id="${item.id}" title="${t("act_open_folder")}">📁</button>` : ''}
             </div>
           </div>
 

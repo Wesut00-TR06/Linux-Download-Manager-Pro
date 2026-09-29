@@ -33,14 +33,16 @@
 <body>
   <header>
     <div class="brand"><span style="color:#00d287;">⚡</span> Linux Download Manager</div>
-    <div style="display:flex; gap:6px;">
-      <button class="btn-clear" id="btn-clear" title="Geçmişi Temizle">🧹 Temizle</button>
-      <button class="btn-clear" id="btn-open-tab" title="Tam Ekran">🌐 Panel</button>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <select id="lang-select" style="background:#0f141c; color:#8b9eb5; border:1px solid #28374d; border-radius:6px; font-size:11px; padding:3px 4px; outline:none; cursor:pointer;"></select>
+      <button class="btn-clear" id="btn-clear" title="Clear">🧹 <span id="txt-clear">Temizle</span></button>
+      <button class="btn-clear" id="btn-open-tab" title="Panel">🌐 <span id="txt-panel">Panel</span></button>
     </div>
   </header>
   <div id="list" class="list">
-    <div class="empty">Yükleniyor...</div>
+    <div class="empty">...</div>
   </div>
+  <script src="i18n.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -41,6 +41,7 @@
 5. **Sayfa İçi Yüzen Panel (Floating Widget)**: Harici hantal pencerelere ihtiyaç duymadan doğrudan tarayıcı sayfasının sağ alt köşesinde indirme hızını, ilerlemeyi ve dosya kontrollerini gösterir.
 6. **Kararlı Hız & Kalan Süre (EMA)**: 3 saniyelik hareketli pencere ve Üstel Hareketli Ortalama (EMA) filtresi ile hız ve kalan süre sıçramaları tamamen engellenmiştir.
 7. **Hız Sınırlayıcı & Otomatik Kapanma**: İnterneti meşgul etmemek için 10 MB/s, 5 MB/s, 2 MB/s, 1 MB/s hız limitleri seçilebilir; indirmeler bitince sistemi otomatik kapatma seçeneği sunar.
+8. **Çoklu Dil Desteği (7 Dil)**: İngilizce (🇬🇧), Türkçe (🇹🇷), Rusça (🇷🇺), İspanyolca (🇪🇸), Çince (🇨🇳), Fransızca (🇫🇷) ve Arapça (🇸🇦). Tarayıcı dilini otomatik algılar ve panelden anında değiştirilebilir.
 
 **Tek Komutla Hızlı Kurulum:**
 ```bash
@@ -92,6 +93,11 @@ cd Linux-Download-Manager-Pro
 
 ### 5. 📊 Stabilized Speed & ETA Calculations
 - Employs a 3-second rolling window and Exponential Moving Average (EMA) filter to completely eliminate jittery speed jumps and erratic ETA fluctuations.
+
+### 6. 🌐 Multi-Language (i18n) Support
+- **7 Built-in Languages**: English (🇬🇧), Turkish (🇹🇷), Russian (🇷🇺), Spanish (🇪🇸), Chinese (🇨🇳), French (🇫🇷), and Arabic (🇸🇦).
+- **Auto-Detection**: Automatically detects and matches your system/browser language (`navigator.language`).
+- **Instant Switcher**: Seamless language selector dropdown in both the floating in-page drawer and toolbar popup.
 
 ---
 

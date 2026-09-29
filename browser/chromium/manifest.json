@@ -24,6 +24,7 @@
         "<all_urls>"
       ],
       "js": [
+        "i18n.js",
         "content-script.js"
       ],
       "css": [
