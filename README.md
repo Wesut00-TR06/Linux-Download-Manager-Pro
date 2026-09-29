@@ -1,184 +1,128 @@
-# Linux Download Manager — IDM alternative for Linux
+# Linux Download Manager Pro (LDM Pro)
 
 <p align="center">
-  <img src="src-tauri/icons/icon.png" width="128" alt="Linux Download Manager icon">
+  <img src="src-tauri/icons/icon.png" width="128" alt="Linux Download Manager Pro icon">
 </p>
 
 <p align="center">
-  <strong>Fast, IDM-inspired download manager for Arch, Ubuntu, Fedora. Built with Rust + Tauri. YouTube, Twitter/X, Reddit, TikTok support via yt-dlp.</strong>
+  <strong>High-performance, IDM-inspired parallel download manager and media extractor for Linux (Ubuntu, Debian, Arch, Fedora). Featuring 16-connection parallel HLS/HTTP engine, in-browser floating drawer, YouTube Mix/Album batch downloading with embedded cover art & ID3 metadata, and dual-audio film remuxing.</strong>
 </p>
 
 <p align="center">
-  <a href="#installation"><b>Install from source</b></a>
+  <a href="#quick-install"><b>Quick Install</b></a>
   &nbsp;·&nbsp;
-  <a href="#troubleshooting">Troubleshooting</a>
+  <a href="#features">Features</a>
+  &nbsp;·&nbsp;
+  <a href="#turkish-summary">Türkçe Açıklama</a>
+  &nbsp;·&nbsp;
+  <a href="#license--credits">License & Credits</a>
 </p>
 
 <p align="center">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg">
   <img alt="Platform: Linux" src="https://img.shields.io/badge/platform-Linux-1f6feb.svg">
-  <img alt="Built with Rust" src="https://img.shields.io/badge/built%20with-Rust-orange.svg">
+  <img alt="Engine: Python 3 Parallel Daemon" src="https://img.shields.io/badge/engine-Python%203%20Daemon-green.svg">
+  <img alt="Author: Wesut00-TR06" src="https://img.shields.io/badge/developer-Wesut00--TR06-teal.svg">
 </p>
 
-<details>
-<summary>Türkçe açıklama</summary>
+---
 
-**Linux için IDM tarzı indirme yöneticisi.** Rust + Tauri ile yazıldı, Chromium tarayıcı eklentisi üzerinden çalışır. YouTube, Twitter, Reddit, TikTok video indirme desteği `yt-dlp` ile. Arch, CachyOS, Ubuntu ve Fedora üzerinde kaynak koddan kurulabilir. Açık kaynak, ücretsiz, **IDM alternatifi**.
+<details id="turkish-summary">
+<summary><b>🇹🇷 Türkçe Açıklama ve Özellikler (Genişletmek için tıklayın)</b></summary>
 
-Tek komutla kurulum:
+### Linux Download Manager Pro Nedir?
+**Linux için en gelişmiş IDM (Internet Download Manager) alternatifi.** Sıfır sistem kaynağı tüketen 1850+ satırlık özel Python Paralel Daemon motoru ve Chromium tabanlı (Chrome, Brave, Edge, Vivaldi) tarayıcı eklentisi ile web sayfalarının içine gömülü olarak çalışır.
+
+#### Temel Özellikler:
+1. **16 Kanallı Paralel HLS & Segment Motoru**: Film ve videoları 16 eş zamanlı bağlantıyla tam hat kapasitesinde indirir. Kesilen veya duraklatılan indirmeler ağ değiştiğinde kaldığı bayttan devam eder.
+2. **Çift Sesli Film Desteği (Dual-Audio Remuxing)**: Türkçe dublaj ve Orijinal ses kanallarını eş zamanlı indirir, ffmpeg ile milisaniye kayması olmadan tek bir MP4 içinde birleştirir.
+3. **Tek Tıkla YouTube Mix / Çalma Listesi İndirme**: YouTube Mix (`list=RD...`) ve çalma listelerindeki tüm parçaları sıralı (`01 - ...`, `02 - ...`) olarak otomatik oluşturulan albüm klasörüne çeker ve masaüstünde açar.
+4. **320 kbps Stüdyo Kalite MP3 & Kapak Resmi**: Müzik indirmelerinde videonun en yüksek çözünürlüklü kapak resmini ve sanatçı/parça ID3 etiketlerini doğrudan MP3 dosyasına gömer.
+5. **Sayfa İçi Yüzen Panel (Floating Widget)**: Harici hantal pencerelere ihtiyaç duymadan doğrudan tarayıcı sayfasının sağ alt köşesinde indirme hızını, ilerlemeyi ve dosya kontrollerini gösterir.
+6. **Kararlı Hız & Kalan Süre (EMA)**: 3 saniyelik hareketli pencere ve Üstel Hareketli Ortalama (EMA) filtresi ile hız ve kalan süre sıçramaları tamamen engellenmiştir.
+7. **Hız Sınırlayıcı & Otomatik Kapanma**: İnterneti meşgul etmemek için 10 MB/s, 5 MB/s, 2 MB/s, 1 MB/s hız limitleri seçilebilir; indirmeler bitince sistemi otomatik kapatma seçeneği sunar.
+
+**Tek Komutla Hızlı Kurulum:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ekremx25/linux-download-manager/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Wesut00-TR06/Linux-Download-Manager-Pro/main/install.sh | bash
 ```
-
 </details>
 
 ---
 
-## What is this?
+## ⚡ Quick Install
 
-A lightweight, fast download manager for **Linux** — think **IDM (Internet Download Manager) alternative** for Arch, Ubuntu, Fedora. Integrates directly into Chromium-based browsers (Chrome, Brave, Edge, Vivaldi) through a native messaging bridge and an extension, and lets you download videos from YouTube, Twitter/X, Reddit, TikTok and ~1000 more sites through `yt-dlp` with a single click.
-
-**Why this exists:** Linux never got an official IDM port, and most download-manager alternatives are either abandoned, require Wine, or don't integrate with the browser. This one does — a Rust binary + a Chromium extension + a Tauri GUI, installed for the current user from source.
-
-## Features
-
-### Video Download Support
-| Platform | Quality Picker | Auto Audio | Download Button |
-|----------|:---:|:---:|:---:|
-| **YouTube** | Yes (360p-4K) | Yes | Player overlay |
-| **Twitter/X** | Yes | Yes | Inline on tweets |
-| **Reddit** | - | Yes | Above video posts |
-
-### Core Features
-- **Multi-segment downloads** - Up to 4 parallel segments for faster downloads
-- **Pause / Resume / Cancel** - Full download control
-- **Bandwidth throttling** - Per-download and global speed limits
-- **Scheduled downloads** - Set a time, download starts automatically
-- **SHA-256 verification** - Optional checksum validation
-- **Queue management** - Configurable concurrent download limit (1-10)
-- **Download history** - SQLite-backed, persistent across restarts
-
-### Desktop Integration
-- **System tray** - Runs in background, click to show/hide
-- **Close to tray** - Window close minimizes to tray instead of quitting
-- **Desktop notifications** - Download complete/failed alerts
-- **Browser integration** - Chromium extension auto-captures downloads
-- **Generic video capture** - Detects direct video, HLS and DASH streams on other websites and falls back to `yt-dlp` for supported pages
-
-### Browser Extension
-- **Inline download buttons** on YouTube, Twitter, Reddit videos
-- **Quality picker** - Choose resolution before downloading
-- **Auto-intercept** - Captures browser downloads from supported sites
-- **Media detection** - Detects video/audio streams on any page
-
-## Screenshots
-
-### Main Window
-Dark-themed UI with download list, progress bars, speed/ETA indicators.
-
-### Browser Integration
-LDM button appears directly on video players - one click to download.
-
-## Installation
-
-### System Requirements
-- **OS**: Linux (x86_64)
-- **Browser**: Google Chrome, Chromium, Brave, Edge, or Vivaldi
-- **ffmpeg**: Required for HLS/DASH streams
-  ```bash
-  # Arch Linux / CachyOS
-  sudo pacman -S ffmpeg
-
-  # Ubuntu/Debian
-  sudo apt install ffmpeg
-
-  # Fedora
-  sudo dnf install ffmpeg    # RPM Fusion, or use Fedora's ffmpeg-free
-  ```
-
-### Install from Source
+Run the one-line installer in your Linux terminal:
 
 ```bash
-# Clone
-git clone https://github.com/ekremx25/linux-download-manager.git
-cd linux-download-manager
+curl -fsSL https://raw.githubusercontent.com/Wesut00-TR06/Linux-Download-Manager-Pro/main/install.sh | bash
+```
 
-# Install for the current user (Fedora, Arch, CachyOS, Debian/Ubuntu)
+Or clone and run locally:
+```bash
+git clone https://github.com/Wesut00-TR06/Linux-Download-Manager-Pro.git
+cd Linux-Download-Manager-Pro
 ./install.sh
 ```
 
-The installer checks Rust and Tauri's WebKitGTK build libraries, installs missing packages with `dnf`, `pacman`, or `apt` using `sudo`, builds the app, and installs the browser bridge. On Fedora, `ffmpeg-free` is used if RPM Fusion's `ffmpeg` package is unavailable. On Arch and CachyOS, the same `pacman` packages are used. Loading the unpacked extension in the browser remains a one-time manual step.
+---
 
-To load the browser extension, open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `~/Documents/Linux Download Manager Extension/`.
+## 🚀 Key Features
 
-## How It Works
+### 1. 🎬 High-Speed Parallel HLS & Dual-Audio Remuxer
+- **16-worker concurrent segment streaming**: Maximizes bandwidth for movies and segmented HLS/M3U8 streams.
+- **Dual-Audio preservation**: Simultaneously downloads Turkish dub and Original audio tracks, automatically multiplexing them into a single clean MP4.
+- **Resilient resume**: Switch networks or pause anytime; downloads resume precisely at the exact segment without restarting.
 
-```
-Browser Extension  →  Native Host  →  App (Rust/Tauri)
-     (JS)              (stdin/stdout)      ↓
-                                      yt-dlp / ffmpeg / HTTP
-                                           ↓
-                                      ~/Downloads/
-```
+### 2. 🎵 YouTube Mix & Playlist Batch Downloader
+- **One-click full album extraction**: Automatically detects Mix and playlist contexts (`list=RD...` / `list=PL...`).
+- **Sequential track numbering**: Saves files as `01 - Title.mp3`, `02 - Title.mp3`, etc.
+- **Dedicated album folder**: Automatically creates and opens `~/Müzik/<Album Name> (Mix)/` on your desktop via `xdg-open`.
+- **Live track progress**: Displays real-time progress indicators (e.g. `[5/50] Current Track Title`) with true overall playlist completion percentage.
 
-1. **Browser extension** detects video streams and adds download buttons
-2. When clicked, sends URL + page info to the **native messaging host**
-3. Native host writes request to **inbox directory**
-4. **App** polls inbox, queues download, uses **yt-dlp** (for social media) or **direct HTTP** (for regular files)
-5. Downloads with progress tracking, speed calculation, ETA
+### 3. 🎶 Embedded High-Res Cover Art & ID3 Metadata
+- Automatically fetches maximum resolution video thumbnail, converts to JPG, and embeds it directly into MP3, FLAC, or M4A audio files.
+- ID3 metadata tagging (artist, track title, album, date) ensures seamless integration with mobile devices, car audio systems, Spotify local files, and VLC.
 
-## Tech Stack
+### 4. ⚡ In-Browser Floating Widget & Controls
+- **Zero-clutter UI**: Sleek, dark-mode floating pill in the bottom-right of browser pages with live speed and progress display.
+- **Instant format & quality picker**: 4K, 1080p Full HD, 720p HD, 320 kbps MP3, FLAC (Lossless), and M4A.
+- **Speed Limiter**: Switch between Unlimited (⚡ Sınırsız), 10 MB/s, 5 MB/s, 2 MB/s, or 1 MB/s anytime.
+- **Auto-Shutdown**: Automatically powers off or sleeps the system when all downloads complete.
 
-| Component | Technology |
-|-----------|-----------|
-| Backend | Rust |
-| Desktop Framework | Tauri 2 |
-| Database | SQLite (rusqlite) |
-| HTTP Client | reqwest (async streaming) |
-| Video Download | yt-dlp + ffmpeg |
-| Browser Extension | Manifest V3 (Chromium) |
-| Frontend | Vanilla HTML/CSS/JS |
-| Packaging | Source installer |
+### 5. 📊 Stabilized Speed & ETA Calculations
+- Employs a 3-second rolling window and Exponential Moving Average (EMA) filter to completely eliminate jittery speed jumps and erratic ETA fluctuations.
 
-## Project Structure
+---
+
+## 📁 Project Architecture
 
 ```
-├── browser/chromium/        # Browser extension
-│   ├── manifest.json
-│   ├── service-worker.js    # Background script
-│   ├── content-script.js    # Page injection (buttons, overlays)
-│   └── content-style.css
-├── src-tauri/
-│   ├── src/
-│   │   ├── app.rs           # App state, queue management
-│   │   ├── download/mod.rs  # Download engine (HTTP, HLS, yt-dlp)
-│   │   ├── commands.rs      # Tauri IPC commands
-│   │   ├── browser.rs       # Native messaging inbox
-│   │   ├── jobs.rs          # Job queue processing
-│   │   ├── storage/mod.rs   # SQLite persistence
-│   │   ├── platform.rs      # Linux paths, first-run setup
-│   │   └── lib.rs           # Tray menu, window management
-│   └── tauri.conf.json
-└── ui/                      # Frontend
-    ├── index.html
-    ├── main.js
-    └── styles.css
+├── daemon/
+│   ├── ldm_daemon.py             # High-performance parallel Python REST daemon (Port 18900)
+│   └── browser_native_host       # Chromium stdio native messaging bridge
+├── browser/chromium/             # Browser extension (Manifest V3)
+│   ├── content-script.js         # In-page floating widget & video detection hooks
+│   ├── service-worker.js         # Request interception & native bridge dispatch
+│   ├── content-style.css         # Dark modern styling for in-page controls
+│   ├── popup.html / popup.js     # Toolbar popup view
+│   └── manifest.json             # Chrome extension manifest
+├── install.sh                    # One-click automated installer
+└── uninstall.sh                  # Complete uninstaller
 ```
 
-## Configuration
+---
 
-Settings are accessible from the app UI:
+## ⚙️ Requirements
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Download directory | `~/Downloads` | Where files are saved |
-| Max concurrent downloads | 3 | Parallel download limit |
-| Bandwidth limit | Unlimited | Global speed cap (KB/s) |
+- **Linux OS**: Ubuntu, Debian, Arch Linux, CachyOS, Fedora, Linux Mint, Pop!_OS.
+- **Python**: Python 3.8+ (pre-installed on almost all Linux distributions).
+- **Core Tools**: `ffmpeg`, `yt-dlp`, and `nodejs` (automatically checked and configured by `install.sh`).
+- **Browser**: Any Chromium-based browser (Google Chrome, Brave, Microsoft Edge, Vivaldi).
 
-## License
+---
 
-MIT
+## 📜 License & Credits
 
-## Credits
-
-Built with [Tauri](https://tauri.app/), [yt-dlp](https://github.com/yt-dlp/yt-dlp), and [ffmpeg](https://ffmpeg.org/).
+- Distributed under the **MIT License**.
+- **Credits & Attribution**: Based on initial ideas and architecture from [ekremx25/linux-download-manager](https://github.com/ekremx25/linux-download-manager). Heavily redesigned, refactored into a high-speed Python parallel daemon, and extended with YouTube Mix/Album batch downloading, dual-audio HLS remuxing, in-page floating UI, and metadata embedding by **[Wesut00-TR06](https://github.com/Wesut00-TR06)**.

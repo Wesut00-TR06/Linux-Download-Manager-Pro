@@ -45,6 +45,7 @@
     }
   ],
   "action": {
-    "default_title": "Linux Download Manager"
+    "default_title": "Linux Download Manager",
+    "default_popup": "popup.html"
   }
 }

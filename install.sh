@@ -118,20 +118,27 @@ build_binary() {
 
 # ── Install all the pieces ───────────────────────────────────────────────────
 install_binary() {
-  log "Installing binary → ${BIN_DIR}/linux-download-manager"
+  log "Installing Python Parallel Daemon & native host → ${APP_DATA_DIR}/bin"
   mkdir -p "${BIN_DIR}" "${APP_DATA_DIR}/bin"
-  install -m 0755 "target/release/linux-download-manager" "${BIN_DIR}/linux-download-manager"
-  install -m 0755 "target/release/browser_native_host"    "${NATIVE_HOST_BIN}"
+  if [[ -f "daemon/ldm_daemon.py" ]]; then
+    install -m 0755 "daemon/ldm_daemon.py" "${APP_DATA_DIR}/bin/ldm_daemon.py"
+  fi
+  if [[ -f "daemon/browser_native_host" ]]; then
+    install -m 0755 "daemon/browser_native_host" "${NATIVE_HOST_BIN}"
+  fi
+
+  cat > "${BIN_DIR}/linux-download-manager" << 'EOF'
+#!/usr/bin/env bash
+python3 "${HOME}/.local/share/linux-download-manager/bin/ldm_daemon.py" &
+xdg-open "http://127.0.0.1:18900" 2>/dev/null || true
+EOF
+  chmod +x "${BIN_DIR}/linux-download-manager"
 }
 
 install_extension() {
   log "Copying browser extension → ${EXT_DIR}"
   mkdir -p "${EXT_DIR}"
-  cp browser/chromium/manifest.json     "${EXT_DIR}/"
-  cp browser/chromium/service-worker.js "${EXT_DIR}/"
-  cp browser/chromium/player-manifest-observer.js "${EXT_DIR}/"
-  cp browser/chromium/content-script.js "${EXT_DIR}/"
-  cp browser/chromium/content-style.css "${EXT_DIR}/"
+  cp -r browser/chromium/* "${EXT_DIR}/"
 }
 
 install_desktop_entry() {
@@ -286,9 +293,11 @@ final_instructions() {
 }
 
 # ── Run ───────────────────────────────────────────────────────────────────────
-ensure_cargo
-ensure_system_libs
-build_binary
+if [[ ! -f "daemon/ldm_daemon.py" ]]; then
+  ensure_cargo
+  ensure_system_libs
+  build_binary
+fi
 install_binary
 install_extension
 install_desktop_entry

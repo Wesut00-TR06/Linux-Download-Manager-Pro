@@ -85,16 +85,30 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.action.onClicked.addListener((tab) => {
-  const payload = chooseBestMediaCapturePayload(
-    tab?.id,
-    null,
-    tab?.url,
-    tab?.title ?? null
-  );
-  if (payload?.ok) {
-    queueNativeCapture(payload.capture, tab?.id);
-  } else {
-    notifyTab(tab?.id, "error", payload?.error ?? "Video akışı henüz yakalanamadı. Sayfayı yenileyip videoyu oynatın, ardından tekrar deneyin.");
+  if (tab?.id) {
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: "open-quality-picker-from-context",
+        pageUrl: tab.url ?? null,
+        title: tab.title ?? null
+      },
+      (response) => {
+        if (chrome.runtime.lastError || !response?.ok) {
+          const payload = chooseBestMediaCapturePayload(
+            tab?.id,
+            null,
+            tab?.url,
+            tab?.title ?? null
+          );
+          if (payload?.ok) {
+            queueNativeCapture(payload.capture, tab?.id);
+          } else {
+            notifyTab(tab?.id, "error", payload?.error ?? "Video akışı henüz yakalanamadı. Sayfayı yenileyip videoyu oynatın, ardından tekrar deneyin.");
+          }
+        }
+      }
+    );
   }
 });
 
@@ -108,32 +122,63 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
 
-  if (info.menuItemId === MENU_DOWNLOAD_PAGE) {
-    const payload = chooseBestMediaCapturePayload(
-      tab?.id,
-      null,
-      tab?.url ?? null,
-      tab?.title ?? null
-    );
-    if (payload?.ok) {
-      queueNativeCapture(payload.capture, tab?.id);
-    } else {
-      notifyTab(tab?.id, "error", payload?.error ?? "Video akışı henüz yakalanamadı. Sayfayı yenileyip videoyu oynatın, ardından tekrar deneyin.");
+  if (info.menuItemId === MENU_DOWNLOAD_PAGE || info.menuItemId === MENU_DOWNLOAD_MEDIA) {
+    if (tab?.id) {
+      chrome.tabs.sendMessage(
+        tab.id,
+        {
+          type: "open-quality-picker-from-context",
+          mediaUrl: info.srcUrl ?? null,
+          pageUrl: tab.url ?? null,
+          title: tab.title ?? null
+        },
+        (response) => {
+          if (chrome.runtime.lastError || !response?.ok) {
+            if (info.menuItemId === MENU_DOWNLOAD_MEDIA && info.srcUrl) {
+              sendToNativeHost({
+                url: info.srcUrl,
+                sourcePageUrl: tab?.url ?? null,
+                sourceTitle: tab?.title ?? null
+              });
+            } else {
+              const payload = chooseBestMediaCapturePayload(
+                tab?.id,
+                null,
+                tab?.url ?? null,
+                tab?.title ?? null
+              );
+              if (payload?.ok) {
+                queueNativeCapture(payload.capture, tab?.id);
+              } else {
+                notifyTab(tab?.id, "error", payload?.error ?? "Video akışı yakalanamadı.");
+              }
+            }
+          }
+        }
+      );
+      return;
     }
-    return;
-  }
-
-  if (info.menuItemId === MENU_DOWNLOAD_MEDIA) {
-    sendToNativeHost({
-      url: info.srcUrl,
-      sourcePageUrl: tab?.url ?? null,
-      sourceTitle: tab?.title ?? null
-    });
   }
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const tabId = sender.tab?.id;
+
+  if (message?.type === "ldm-api-proxy") {
+    const url = "http://127.0.0.1:18900" + (message.path || "");
+    const options = {
+      method: message.method || "GET",
+      headers: { "Content-Type": "application/json" }
+    };
+    if (message.body) {
+      options.body = JSON.stringify(message.body);
+    }
+    fetch(url, options)
+      .then(res => res.json())
+      .then(data => sendResponse({ ok: true, data }))
+      .catch(err => sendResponse({ ok: false, error: err.message }));
+    return true;
+  }
 
   if (message?.type === "capture-diagnostic-frame") {
     if (typeof tabId === "number" && tabId >= 0) {
@@ -191,6 +236,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sourceTitle: message.payload?.sourceTitle ?? sender.tab?.title ?? null,
         format: message.payload?.format ?? null,
         forceYtdlp: message.payload?.forceYtdlp ?? false,
+        isPlaylist: Boolean(message.payload?.isPlaylist),
         streamManifest: message.payload?.streamManifest ?? isManifestUrl(message.payload?.url)
       },
       tabId
@@ -200,11 +246,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message?.type === "capture-best-media") {
+    const isPlaylist = Boolean(message.payload?.isPlaylist);
     const payload = chooseBestMediaCapturePayload(
       tabId,
       message.payload?.preferredUrl,
       message.payload?.sourcePageUrl ?? sender.tab?.url ?? null,
-      message.payload?.sourceTitle ?? sender.tab?.title ?? null
+      message.payload?.sourceTitle ?? sender.tab?.title ?? null,
+      isPlaylist
     );
     if (!payload?.ok) {
       sendResponse({
@@ -217,6 +265,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     payload.capture.format = message.payload?.format ?? null;
+    payload.capture.isPlaylist = Boolean(message.payload?.isPlaylist);
+    if (payload.capture.isPlaylist) {
+      payload.capture.forceYtdlp = true;
+      if (message.payload?.sourcePageUrl) {
+        payload.capture.url = message.payload.sourcePageUrl;
+        payload.capture.sourcePageUrl = message.payload.sourcePageUrl;
+      }
+    }
     queueNativeCapture(payload.capture, tabId);
     sendResponse({
       ok: true,
@@ -231,7 +287,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   recentMediaByTab.delete(tabId);
   captureDiagnostics.delete(tabId);
-  chrome.action.setBadgeText({ tabId, text: "" });
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
@@ -241,7 +296,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
   recentMediaByTab.delete(tabId);
   captureDiagnostics.delete(tabId);
-  chrome.action.setBadgeText({ tabId, text: "" });
+  try {
+    chrome.action.setBadgeText({ tabId, text: "" })?.catch(() => {});
+  } catch (e) {}
 });
 
 chrome.downloads.onCreated.addListener((downloadItem) => {
@@ -329,10 +386,13 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
   const candidate = (recentMediaByTab.get(details.tabId) ?? []).find(
     (item) => item.url === normalizeMediaCandidateUrl(details.url));
   if (candidate) {
-    candidate.streamKind = candidate.bodyClassified ? "playlist" : manifest ? "playlist" : fragment ? "fragment"
+    const isMaster = /\/(master|index)\.(txt|m3u8|json)/i.test(details.url);
+    const isAudioOnly = /(aud|audio|sublist_aud)/i.test(details.url) || mime.startsWith("audio/");
+
+    candidate.streamKind = candidate.bodyClassified ? "playlist" : isMaster ? "master" : isAudioOnly ? "audio" : manifest ? "playlist" : fragment ? "fragment"
       : ["unknown", "page"].includes(candidate.streamKind)
-      ? (mime.startsWith("audio/") ? "audio" : "video") : candidate.streamKind;
-    candidate.score = manifest ? 120 : fragment ? 30 : candidate.score;
+      ? (isAudioOnly ? "audio" : "video") : candidate.streamKind;
+    candidate.score = isMaster ? 160 : isAudioOnly ? 35 : manifest ? 120 : fragment ? 30 : candidate.score;
     candidate.mimeClassified = true;
     recentMediaByTab.get(details.tabId).sort((a, b) => b.score - a.score || b.seenAt - a.seenAt);
   }
@@ -649,6 +709,13 @@ function scoreMediaCandidate(url, type) {
     return 0;
   }
 
+  if (/\/(master|index)\.(txt|m3u8|json)/i.test(parsedUrl.pathname)) {
+    return 160;
+  }
+  if (/(aud|audio|sublist_aud)/i.test(parsedUrl.pathname)) {
+    return 35;
+  }
+
   const hasByteRange = hasByteRangeQuery(parsedUrl);
   const facebookMetadata = parseFacebookEfgMetadata(parsedUrl);
   const twitterKind = classifyTwitterMediaKind(parsedUrl);
@@ -657,7 +724,7 @@ function scoreMediaCandidate(url, type) {
     return -100;
   }
   if (isDisguisedHlsManifest(parsedUrl)) {
-    return 122;
+    return 125;
   }
   if (extension === "m3u8") {
     if (twitterKind === "audio") {
@@ -719,13 +786,15 @@ function updateBadge(tabId, count) {
   }
 
   const text = count > 0 ? String(Math.min(count, 99)) : "";
-  chrome.action.setBadgeText({ tabId, text });
-  chrome.action.setTitle({
-    tabId,
-    title: count > 0
-      ? `Linux Download Manager found ${count} downloadable items`
-      : "Linux Download Manager"
-  });
+  try {
+    chrome.action.setBadgeText({ tabId, text })?.catch(() => {});
+    chrome.action.setTitle({
+      tabId,
+      title: count > 0
+        ? `Linux Download Manager found ${count} downloadable items`
+        : "Linux Download Manager"
+    })?.catch(() => {});
+  } catch (e) {}
 }
 
 function pulseBadge(tabId, text) {
@@ -733,10 +802,14 @@ function pulseBadge(tabId, text) {
     return;
   }
 
-  chrome.action.setBadgeText({ tabId, text });
-  setTimeout(() => {
-    chrome.action.setBadgeText({ tabId, text: "" });
-  }, 1800);
+  try {
+    chrome.action.setBadgeText({ tabId, text })?.catch(() => {});
+    setTimeout(() => {
+      try {
+        chrome.action.setBadgeText({ tabId, text: "" })?.catch(() => {});
+      } catch (e) {}
+    }, 1800);
+  } catch (e) {}
 }
 
 function notifyTab(tabId, tone, message) {
@@ -744,15 +817,20 @@ function notifyTab(tabId, tone, message) {
     return;
   }
 
-  chrome.tabs.sendMessage(
-    tabId,
-    {
-      type: "native-capture-status",
-      tone,
-      message
-    },
-    () => void chrome.runtime.lastError
-  );
+  try {
+    const p = chrome.tabs.sendMessage(
+      tabId,
+      {
+        type: "native-capture-status",
+        tone,
+        message
+      },
+      () => void chrome.runtime.lastError
+    );
+    if (p && typeof p.catch === "function") {
+      p.catch(() => {});
+    }
+  } catch (e) {}
 }
 
 function looksLikeQueryVideoUrl(parsedUrl) {
@@ -796,19 +874,74 @@ function canTryYtdlpPage(pageUrl) {
     && !/(^|\.)yabancidizi\.news$/i.test(parsedUrl.hostname));
 }
 
-function chooseBestMediaCapturePayload(tabId, preferredUrl, sourcePageUrl, sourceTitle) {
-  // X serves some captured video renditions without audio. Download from the
-  // post instead so yt-dlp can select and merge the complete media.
-  if (isTwitterStatusPageUrl(sourcePageUrl)) {
+function isValidTikTokMediaUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  if (/monitor_web|webmssdk|telemetry|analytics|log_web|webcast|falcon|report|mon\.tiktok|mon-sg|mcs\.tiktok|passport|login|logout|location|check_in/i.test(url)) return false;
+  if (/\.(json|js|css|svg|png|jpe?g|ico|webp|gif)($|\?)/i.test(url)) return false;
+
+  const isTikTokCdnHost = /(tiktokcdn\.com|tiktokv\.com|tiktok\.com|pstatp\.com|akamaized\.net|ibyteimg\.com|byteoversea\.com)/i.test(url);
+  if (!isTikTokCdnHost) return false;
+
+  const hasVideoMarker = (/video\/tos/i.test(url) || /\.mp4($|\?)/i.test(url) || /mime_type=video/i.test(url) || /playAddr/i.test(url) || /range=\d+/i.test(url) || /&vr=/i.test(url) || /&btag=/i.test(url));
+  return hasVideoMarker;
+}
+
+function isSocialMediaPageUrl(url) {
+  if (!url) return false;
+  const host = safeParseUrl(url)?.hostname ?? "";
+  return /(^|\.)(youtube\.com|youtu\.be|instagram\.com|facebook\.com|fb\.watch|tiktok\.com|twitter\.com|x\.com|reddit\.com|pinterest\.com|twitch\.tv|vimeo\.com|dailymotion\.com)$/i.test(host);
+}
+
+function chooseBestMediaCapturePayload(tabId, preferredUrl, sourcePageUrl, sourceTitle, isPlaylist = false) {
+  // Social media platforms (YouTube, Instagram, Facebook, TikTok, Twitter/X, Reddit, etc.)
+  // must be downloaded from the post/video page URL using yt-dlp for full video+audio and quality options.
+  if (isSocialMediaPageUrl(sourcePageUrl) || isTwitterStatusPageUrl(sourcePageUrl)) {
+    let cleanUrl = sourcePageUrl;
+    // CRITICAL: Do NOT strip playlist/mix parameters if isPlaylist is TRUE!
+    if (!isPlaylist && cleanUrl && (cleanUrl.includes("youtube.com/watch") || cleanUrl.includes("youtu.be/"))) {
+      cleanUrl = cleanUrl.replace(/[?&](list|index|start_radio)=[^&]+/g, "");
+      if (!cleanUrl.includes("?") && cleanUrl.includes("&")) {
+        cleanUrl = cleanUrl.replace("&", "?");
+      }
+    }
+
+    // TikTok feed vs specific video check
+    let forceYtdlp = true;
+    let finalUrl = cleanUrl;
+    if (cleanUrl && cleanUrl.includes("tiktok.com")) {
+      const isPost = cleanUrl.includes("/video/");
+      const validPreferred = isValidTikTokMediaUrl(preferredUrl) ? preferredUrl : null;
+      if (validPreferred) {
+        finalUrl = validPreferred;
+        forceYtdlp = false;
+      } else {
+        const candidates = getMediaCandidatesForTab(tabId).filter(c => c.streamKind !== "fragment");
+        const directCandidate = candidates.find(c => isValidTikTokMediaUrl(c.url))?.url;
+        if (directCandidate) {
+          finalUrl = directCandidate;
+          forceYtdlp = false;
+        } else if (isPost) {
+          finalUrl = cleanUrl;
+          forceYtdlp = true;
+        } else {
+          return {
+            ok: false,
+            error: "TikTok video akışı henüz yakalanamadı. Lütfen videoyu 1 saniye oynatıp tekrar deneyin."
+          };
+        }
+      }
+    }
+
     return {
       ok: true,
       capture: {
-        url: sourcePageUrl,
+        url: finalUrl,
         audioUrl: null,
-        sourcePageUrl,
+        sourcePageUrl: cleanUrl,
         sourceTitle,
-        forceYtdlp: true,
-        streamManifest: false
+        forceYtdlp: forceYtdlp,
+        streamManifest: false,
+        isPlaylist: Boolean(isPlaylist)
       }
     };
   }
@@ -1017,6 +1150,13 @@ function classifyMediaCandidate(url, type) {
   }
   if (isVideoFacebookMetadata(facebookMetadata)) {
     return "video";
+  }
+
+  if (/\/(master|index)\.(txt|m3u8|json)/i.test(parsedUrl.pathname)) {
+    return "master";
+  }
+  if (/(aud|audio|sublist_aud)/i.test(parsedUrl.pathname)) {
+    return "audio";
   }
 
   const extension = parsedUrl.pathname.toLowerCase().split(".").pop();
