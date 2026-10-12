@@ -112,17 +112,17 @@ function isExcludedHost(hostname) {
 }
 
 function bootstrap() {
-  if (/(^|\.)molystream\.org$/i.test(window.location.hostname)) {
-    window.addEventListener("message", (event) => {
-      if (event.source !== window || event.data?.type !== "ldm-player-manifest") return;
-      const url = normalizeUrl(event.data.url);
-      if (!url || playerManifests.has(url)) return;
-      playerManifests.add(url);
-      if (playerManifests.size > 12) playerManifests.delete(playerManifests.values().next().value);
-      reportObservedMediaCandidates();
-    });
-    window.postMessage({type: "ldm-request-player-manifests"}, window.location.origin);
-  }
+  window.addEventListener("message", (event) => {
+    if (event.source !== window || event.data?.type !== "ldm-player-manifest") return;
+    const url = normalizeUrl(event.data.url);
+    if (!url || playerManifests.has(url)) return;
+    playerManifests.add(url);
+    if (playerManifests.size > 12) playerManifests.delete(playerManifests.values().next().value);
+    reportObservedMediaCandidates();
+    scheduleMediaOverlayRefresh();
+  });
+  window.postMessage({type: "ldm-request-player-manifests"}, window.location.origin);
+
   if (isExcludedHost(window.location.hostname)) {
     return;
   }
@@ -2029,7 +2029,7 @@ function looksLikeMediaSurface(element) {
     return false;
   }
 
-  const hasMediaChildren = Boolean(element.querySelector("video, audio, source, img, canvas"));
+  const hasMediaChildren = Boolean(element.querySelector("video, audio, source, img, canvas, iframe"));
   const hasPlayableRole =
     element.matches('[role="button"], [role="link"], a[href]') ||
     element.querySelector('[aria-label*="play" i], [data-testid*="play" i], button');

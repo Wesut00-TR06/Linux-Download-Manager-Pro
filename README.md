@@ -42,6 +42,7 @@
 6. **Kararlı Hız & Kalan Süre (EMA)**: 3 saniyelik hareketli pencere ve Üstel Hareketli Ortalama (EMA) filtresi ile hız ve kalan süre sıçramaları tamamen engellenmiştir.
 7. **Hız Sınırlayıcı & Otomatik Kapanma**: İnterneti meşgul etmemek için 10 MB/s, 5 MB/s, 2 MB/s, 1 MB/s hız limitleri seçilebilir; indirmeler bitince sistemi otomatik kapatma seçeneği sunar.
 8. **Çoklu Dil Desteği (7 Dil)**: İngilizce (🇬🇧), Türkçe (🇹🇷), Rusça (🇷🇺), İspanyolca (🇪🇸), Çince (🇨🇳), Fransızca (🇫🇷) ve Arapça (🇸🇦). Tarayıcı dilini otomatik algılar ve panelden anında değiştirilebilir.
+9. **Kinescope & Playerjs Şifreli Akış Desteği**: `hintfilmizle.com` ve benzeri film/dizi platformlarında kullanılan Base64/XOR şifreli HLS akışlarını otomatik deşifre eder; en yüksek kalitede (1080p Full HD) tek tıkla indirme sağlar.
 
 **Tek Komutla Hızlı Kurulum:**
 ```bash
@@ -98,6 +99,11 @@ cd Linux-Download-Manager-Pro
 - **7 Built-in Languages**: English (🇬🇧), Turkish (🇹🇷), Russian (🇷🇺), Spanish (🇪🇸), Chinese (🇨🇳), French (🇫🇷), and Arabic (🇸🇦).
 - **Auto-Detection**: Automatically detects and matches your system/browser language (`navigator.language`).
 - **Instant Switcher**: Seamless language selector dropdown in both the floating in-page drawer and toolbar popup.
+
+### 7. 🔐 Kinescope & Playerjs Encrypted Stream Decryption
+- **Automatic Manifest Decryption**: Intercepts and decrypts Base64/XOR obfuscated playlists (`{"p": "...", "v": 1}`) used by sites like `hintfilmizle.com` and Kinescope CDN players.
+- **Universal Main-World Observer**: Discovers playlists directly through in-page fetch/XHR monitoring and `window.player.api("file")` probing.
+- **Full Quality Preservation**: Downloads uncompressed 1080p Full HD HLS segments with multi-connection parallel acceleration.
 
 ---
 

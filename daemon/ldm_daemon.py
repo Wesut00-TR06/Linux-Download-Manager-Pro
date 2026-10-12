@@ -17,6 +17,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import hashlib
+import base64
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -53,6 +54,28 @@ def format_duration(seconds):
     if h > 0:
         return f"{h:02d}:{m:02d}:{s:02d}"
     return f"{m:02d}:{s:02d}"
+
+KINESCOPE_DECODER_KEY = "RySdvcyu5iTUxn97vn4HwoniwgxaCynA"
+
+def decode_kinescope_playlist(text: str) -> str:
+    """Decodes Kinescope / Playerjs encrypted playlist JSON: {'p': '...', 'v': 1}"""
+    if not text or not text.strip().startswith("{"):
+        return text
+    try:
+        data = json.loads(text)
+        p = data.get("p")
+        if not p or not isinstance(p, str):
+            return text
+        b64_str = p[::-1]
+        raw_bytes = base64.b64decode(b64_str)
+        key_bytes = KINESCOPE_DECODER_KEY.encode("utf-8")
+        decrypted = bytes([b ^ key_bytes[i % len(key_bytes)] for i, b in enumerate(raw_bytes)])
+        decoded_text = decrypted.decode("utf-8", errors="ignore")
+        if "#EXTM3U" in decoded_text:
+            return decoded_text
+    except Exception:
+        pass
+    return text
 
 class DownloadManager:
     def __init__(self):
@@ -525,12 +548,14 @@ class DownloadManager:
                 req_hdrs[k] = v
             if not req_hdrs.get("User-Agent") and not req_hdrs.get("user-agent"):
                 req_hdrs["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            if "kinescope" in url.lower():
+                req_hdrs.setdefault("Referer", "https://kinescopecdn.net/")
 
             lower_url = url.lower()
             if any(ext in lower_url for ext in ["m3u8", "master.txt", "/txt/", "/hls/"]):
                 req = urllib.request.Request(url, headers=req_hdrs)
                 with urllib.request.urlopen(req, timeout=8) as resp:
-                    content = resp.read().decode('utf-8', errors='ignore')
+                    content = decode_kinescope_playlist(resp.read().decode('utf-8', errors='ignore'))
 
                 if "#EXT-X-STREAM-INF" in content and "#EXTINF" not in content:
                     lines = [l.strip() for l in content.splitlines() if l.strip()]
@@ -541,7 +566,7 @@ class DownloadManager:
                                 sub_url = urljoin(url, next_l)
                                 sub_req = urllib.request.Request(sub_url, headers=req_hdrs)
                                 with urllib.request.urlopen(sub_req, timeout=8) as sub_resp:
-                                    content = sub_resp.read().decode('utf-8', errors='ignore')
+                                    content = decode_kinescope_playlist(sub_resp.read().decode('utf-8', errors='ignore'))
                                 break
 
                 inf_matches = re.findall(r'#EXTINF:([0-9.]+)', content)
@@ -611,12 +636,14 @@ class DownloadManager:
                 req_hdrs["Referer"] = "https://closeload.filmmakinesi.to/"
             elif "rapid" in url or "rapidrame" in url:
                 req_hdrs["Referer"] = "https://rapid.filmmakinesi.to/"
+            elif "kinescope" in url:
+                req_hdrs.setdefault("Referer", "https://kinescopecdn.net/")
 
             resp = session.get(url, headers=req_hdrs, timeout=10)
             if resp.status_code != 200:
                 raise ValueError(f"HTTP error {resp.status_code} fetching playlist")
 
-            playlist_content = resp.text
+            playlist_content = decode_kinescope_playlist(resp.text)
             lines = [l.strip() for l in playlist_content.splitlines() if l.strip()]
 
             is_master = any(l.startswith("#EXT-X-STREAM-INF") for l in lines) or any(l.startswith("#EXT-X-MEDIA:TYPE=AUDIO") for l in lines)
@@ -663,7 +690,7 @@ class DownloadManager:
             v_resp = session.get(video_url, headers=req_hdrs, timeout=10)
             if v_resp.status_code != 200:
                 raise ValueError(f"HTTP error {v_resp.status_code} fetching video sublist")
-            v_content = v_resp.text
+            v_content = decode_kinescope_playlist(v_resp.text)
 
             # Check encryption or unsupported byte ranges
             if re.search(r'#EXT-X-KEY:METHOD=(?!NONE)', v_content, re.IGNORECASE):
@@ -694,7 +721,7 @@ class DownloadManager:
             for a_track in audio_tracks:
                 a_resp = session.get(a_track["uri"], headers=req_hdrs, timeout=10)
                 if a_resp.status_code == 200:
-                    a_content = a_resp.text
+                    a_content = decode_kinescope_playlist(a_resp.text)
                     if re.search(r'#EXT-X-KEY:METHOD=(?!NONE)', a_content, re.IGNORECASE):
                         raise ValueError("Encrypted audio stream detected")
                     a_lines = [l.strip() for l in a_content.splitlines() if l.strip()]
